@@ -9,8 +9,11 @@ import shutil
 
 from pylabel import importer
 import pandas as pd
+from tqdm import tqdm
 
-from ..config import dataset_config
+from config import dataset_config
+from vision_structure.images import convert_png_to_jpg
+
 
 
 pd.set_option('future.no_silent_downcasting', True)
@@ -58,10 +61,12 @@ class DataStructure:
         if filter_images:
             train_dataset.df = train_dataset.df[train_dataset.df['cat_name'] != '']
             val_dataset.df = val_dataset.df[val_dataset.df['cat_name'] != '']
-        
+
         if classes is not None:
-            train_dataset.df = train_dataset.df[train_dataset.df['cat_name'].isin(classes)]
-            val_dataset.df = val_dataset.df[val_dataset.df['cat_name'].isin(classes)]
+            train_dataset.df = train_dataset.df[train_dataset.df['cat_name'].isin(
+                classes)]
+            val_dataset.df = val_dataset.df[val_dataset.df['cat_name'].isin(
+                classes)]
 
         train_dataset.export.ExportToYoloV5(output_path=os.path.join(
             structure_path, 'labels'), copy_images=True, cat_id_index=0)
@@ -140,4 +145,66 @@ class DataStructure:
                     os.path.join(structure_path, 'labels'))
         shutil.move(os.path.join(structure_path, 'val'),
                     os.path.join(structure_path, 'labels'))
+
+    def tensorflow(self, structure_name='yolo', filter_images=True, classes=None):
+        '''
+        Create the structure folders to be used with detectron2.
+        Ate the moment, only work with coco format input json
+
+        Args:
+            filter (Bool):Filter images without annotations.
+        Example:
+            >>> structure = DatasetStructure(config)
+            >>> structure.yolo()
+        '''
+
+        base_path = os.getcwd()
+        structure_path = os.path.join(base_path, structure_name)
+        path_to_train_ann = os.path.join(
+            self.config.annotations_path,
+            self.config.json_file_names[0]
+        )
+
+        # Load a dataset
+        train_dataset = importer.ImportCoco(
+            path=path_to_train_ann, path_to_images=self.config.images_path)
+        if self.config.json_file_names[1]:
+            path_to_val_ann = os.path.join(
+                self.config.annotations_path, self.config.json_file_names[1])
+            val_dataset = importer.ImportCoco(
+                path=path_to_val_ann, path_to_images=self.config.images_path)
+
+        if filter_images:
+            train_dataset.df = train_dataset.df[train_dataset.df['cat_name'] != '']
+            val_dataset.df = val_dataset.df[val_dataset.df['cat_name'] != '']
+
+        if classes is not None:
+            train_dataset.df = train_dataset.df[train_dataset.df['cat_name'].isin(
+                classes)]
+            val_dataset.df = val_dataset.df[val_dataset.df['cat_name'].isin(
+                classes)]
+
+        train_dataset.export.ExportToVoc(
+            output_path=os.path.join(structure_path,
+                                     'train/labels'))
+
+        val_dataset.export.ExportToVoc(output_path=os.path.join(
+            structure_path, 'val/labels'))
+
+        os.makedirs(os.path.join(structure_path, 'train/images'), exist_ok=True)
+        os.makedirs(os.path.join(structure_path, 'val/images'), exist_ok=True)
+
+        train_images = train_dataset.df.groupby("img_id").first()
+        val_images = val_dataset.df.groupby("img_id").first()
+
+        for img in tqdm(train_images.get("img_filename").values, desc="Copying train images"):
+            shutil.copy2(os.path.join(self.config.images_path, img),
+                         os.path.join(structure_path, 'train/images'))
+        convert_png_to_jpg(os.path.join(structure_path, 'train/images'))
+
+        for img in tqdm(val_images.get("img_filename").values, desc="Copying val images"):
+            shutil.copy2(os.path.join(self.config.images_path, img),
+                         os.path.join(structure_path, 'val/images'))                   
+        convert_png_to_jpg(os.path.join(structure_path, 'val/images'))
+            
         
