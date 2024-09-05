@@ -18,7 +18,7 @@ fi
 sudo rm -rf vision_utilities || handle_error "Failed to remove original vision_utilities directory"
 
 # Move the temporary vision_utilities back to the original location using rsync
-sudo rsync -a ../vision_utilities_temp/ vision_utilities || handle_error "Failed to move vision_utilities_temp back to vision_utilities"
+sudo rsync -a ../vision_utilities_temp/ ../vision_utilities || handle_error "Failed to move vision_utilities_temp back to vision_utilities"
 
 # Remove the temporary directory
 sudo rm -rf ../vision_utilities_temp || handle_error "Failed to remove temporary directory ../vision_utilities_temp"
