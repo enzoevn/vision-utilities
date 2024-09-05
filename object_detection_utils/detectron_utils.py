@@ -1,5 +1,5 @@
 """
-This module contains utility functions for working with Detectron2.
+This module contains utility functions to work with Detectron2.
 
 It defines the get_dataset_dicts function.
 """

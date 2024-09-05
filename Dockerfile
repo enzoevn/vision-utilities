@@ -13,7 +13,7 @@ RUN apt-get update && \
 WORKDIR /home/enzo
 COPY requirements.txt /home/enzo
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip uninstall opencv-python
+RUN pip uninstall -y opencv-python
 RUN pip install opencv-python
 
 USER enzo

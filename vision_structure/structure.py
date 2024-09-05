@@ -10,7 +10,7 @@ import shutil
 from pylabel import importer
 import pandas as pd
 
-from . import dataset_config
+from ..config import dataset_config
 
 
 pd.set_option('future.no_silent_downcasting', True)
