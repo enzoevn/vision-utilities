@@ -1,4 +1,3 @@
-cd vision_utilities
 mv vision_utilities /vision_utilities_temp
 rm -r vision_utilities
 mv vision_utilities_temp vision_utilities
